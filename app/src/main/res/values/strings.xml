@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CredentialsAPI</string>
+    <string name="login_button_label">Login</string>
+</resources>
