@@ -74,8 +74,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .setPasswordLoginSupported(true)
                 .setAccountTypes(
                         IdentityProviders.GOOGLE,
-                        IdentityProviders.FACEBOOK,
-                        "https://gree.net"
+                        IdentityProviders.FACEBOOK
+//                        "https://gree.net"
                 ).build();
 
         Auth.CredentialsApi.request(mCredentialsClient, mCredentialRequest).setResultCallback(
@@ -106,69 +106,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             } else {
                 Log.d(TAG, "ID Token: null");
             }
-            Auth.CredentialsApi.delete(mCredentialsClient, credential).setResultCallback(
-                    new ResultCallback() {
-                        @Override
-                        public void onResult(Result result) {
-                            Status status = result.getStatus();
-                            if (status.isSuccess()) {
-                                Log.d(TAG, "Bye!");
-                            } else {
-                                Log.d(TAG, "Failed to say bye!");
-                            }
-                        }
-                    });
         }
     }
 
     private void onHintRetrieved(Credential credential) {
         Log.d(TAG, String.format("onHintRetrieved %s", credential.getId()));
-        final AccountManager accountManager = AccountManager.get(this);
-        final Account account = new Account(credential.getId(), "com.google");
-        accountManager.getAuthToken(account, "oauth2:openid profile email", null, this, new AccountManagerCallback<Bundle>() {
-            @Override
-            public void run(AccountManagerFuture<Bundle> future) {
-                try {
-                    Bundle bundle = future.getResult();
-                    for (String key : bundle.keySet()) {
-                        Object value = bundle.get(key);
-                        Log.d("callback", String.format("%s %s", key, value.toString()));
-                    }
-                    String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-                    String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-                    Log.d("access_token", authToken);
-                    notify(String.format("token: %s", authToken));
-                    Credential credential = new Credential.Builder(accountName)
-//                            .setAccountType(credential.getAccountType())
-//                            .setAccountType(IdentityProviders.GOOGLE)
-//                            .setAccountType(IdentityProviders.FACEBOOK)
-                            .setAccountType("https://gree.net")
-                            .setName(accountName)
-                            .build();
-                    Auth.CredentialsApi.save(mCredentialsClient, credential).setResultCallback(
-                            new ResultCallback() {
-                                @Override
-                                public void onResult(Result result) {
-                                    Status status = result.getStatus();
-                                    if (status.isSuccess()) {
-                                        Log.d(TAG, "SAVE: OK");
-                                    } else {
-                                        Log.d(TAG, "SAVE: NG");
-                                    }
-                                }
-                            });
-                } catch (Exception e) {
-                    Log.d("error", e.toString());
-                    Log.d("error message", e.getMessage());
-                    notify(String.format("error: %s", e.getMessage()));
-                }
-            }
-
-            private void notify(String message) {
-                final RelativeLayout layout = (RelativeLayout) findViewById(R.id.root_layout);
-                Snackbar.make(layout, message, Snackbar.LENGTH_LONG).show();
-            }
-        }, null);
+        Log.d(TAG, String.format("Account Type: %s", credential.getAccountType()));
+        if (!credential.getIdTokens().isEmpty()) {
+            IdToken idToken = credential.getIdTokens().get(0);
+            Log.d(TAG, String.format("ID Token: %s", idToken.getIdToken()));
+        } else {
+            Log.d(TAG, "ID Token: null");
+        }
     }
 
     private void resolveResult(Status status) {
@@ -184,9 +133,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     break;
                 case CommonStatusCodes.SIGN_IN_REQUIRED:
                     HintRequest hintRequest = new HintRequest.Builder()
-                            .setHintPickerConfig(new CredentialPickerConfig.Builder()
-                                    .setShowCancelButton(true)
-                                    .build())
                             .setEmailAddressIdentifierSupported(true)
                             .build();
                     PendingIntent intent = Auth.CredentialsApi.getHintPickerIntent(mCredentialsClient, hintRequest);
