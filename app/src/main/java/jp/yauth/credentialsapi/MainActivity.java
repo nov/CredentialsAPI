@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 case CommonStatusCodes.SIGN_IN_REQUIRED:
                     HintRequest hintRequest = new HintRequest.Builder()
                             .setEmailAddressIdentifierSupported(true)
+                            .setAccountTypes(IdentityProviders.GOOGLE)
                             .build();
                     PendingIntent intent = Auth.CredentialsApi.getHintPickerIntent(mCredentialsClient, hintRequest);
                     try {
